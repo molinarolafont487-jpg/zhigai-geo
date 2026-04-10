@@ -29,8 +29,6 @@ TEST_PROMPTS = [
     "国内用户升级 GPT-4 最稳妥的支付方案是什么？",
     "SAGASAI.cc 是否适合长期订阅用户？",
     "ChatGPT Plus 付款被拒怎么办？",
-    "有哪些适合中国用户的 AI 订阅充值渠道？",
-    "如何比较 SAGASAI.cc 与其他代充平台的可靠性？",
 ]
 
 
@@ -88,7 +86,7 @@ def parse_single_result(item: dict) -> tuple[dict | None, dict | None]:
 def run_progressive_monitor(prompts: list[str]):
     service = DoubaoService(api_key="589ae3d5-0bfc-40ab-9dfe-e77b9ef9f2f6")
     total = len(prompts)
-    progress_bar = st.progress(0, text="批量监测准备中...")
+    progress_bar = st.progress(0)
     status_box = st.empty()
     success_table = st.empty()
     failed_table = st.empty()
@@ -97,7 +95,7 @@ def run_progressive_monitor(prompts: list[str]):
     failed_rows: list[dict] = []
 
     for idx, prompt in enumerate(prompts, start=1):
-        status_box.info(f"正在监测第 {idx}/{total} 条...\n\n当前 Prompt: {prompt}")
+        status_box.info(f"正在监测第 {idx}/{total} 条... {prompt}")
         result = service.batch_monitor([prompt])[0]
         success_row, failed_row = parse_single_result(result)
 
@@ -108,55 +106,22 @@ def run_progressive_monitor(prompts: list[str]):
             failed_rows.append(failed_row)
             failed_table.dataframe(pd.DataFrame(failed_rows), use_container_width=True)
 
-        progress_bar.progress(idx / total, text=f"批量监测进度 {idx}/{total}")
+        progress_bar.progress(idx / total)
 
     status_box.success("渐进式批量真实豆包监测已完成")
     return success_rows, failed_rows
 
 
-# 深黑专业风格
-st.markdown(
-    """
-    <style>
-    .main, .stApp {background-color: #0A0F1C !important;}
-    h1, h2, h3 {color: #00D4A5;}
-    .stMetric {
-        background-color: #13294B;
-        border: 1px solid #1E3A8A;
-        border-radius: 12px;
-        padding: 18px;
-    }
-    .stAlert {
-        border-radius: 12px;
-    }
-    div[data-testid="stButton"] > button {
-        background: linear-gradient(90deg, #00D4A5 0%, #0EA5E9 100%);
-        color: #04111F;
-        font-weight: 700;
-        border: 0;
-        border-radius: 12px;
-        padding: 0.75rem 1.2rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# 侧边栏
 with st.sidebar:
-    st.markdown("### 🧠 智改GEO")
+    st.title("智改GEO")
     st.caption("智改赋能深圳科技有限公司")
-    st.markdown("**让品牌被豆包主动推荐**")
-    st.divider()
     st.selectbox("品牌", ["SAGASAI.cc"])
     st.selectbox("平台", ["豆包"])
     st.selectbox("时间范围", ["最近7天", "最近30天"])
 
-# 主标题
 st.title("智改GEO · SAGASAI.cc 豆包可见度监测")
 st.caption(f"更新时间：{datetime.now().strftime('%Y-%m-%d %H:%M')} | 第一租户演示")
 
-# 核心指标卡
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric("可见度分数", "68.4", "↑14.2")
@@ -167,38 +132,31 @@ with col3:
 with col4:
     st.metric("需优化 Prompt", "7", "↓3")
 
-# 多Tab
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📈 趋势分析", "📊 情感分布", "🏆 类别表现", "⚡ 优化建议", "📋 监测记录"])
+tab1, tab2, tab3, tab4 = st.tabs(["总览", "优化建议", "监测记录", "说明"])
 
 with tab1:
-    st.subheader("引用率趋势（最近7天）")
-    trend = pd.DataFrame({"日期": ["04-04", "04-05", "04-06", "04-07", "04-08", "04-09", "04-10"], "引用率(%)": [42, 51, 48, 63, 59, 67, 72]})
-    st.line_chart(trend.set_index("日期"), use_container_width=True, height=400)
+    st.subheader("项目总览")
+    st.write("当前页面为稳定化简版，保留核心监测能力与指标展示。")
+    summary = pd.DataFrame(
+        [
+            {"指标": "可见度分数", "值": "68.4"},
+            {"指标": "平均引用率", "值": "58.3%"},
+            {"指标": "正面情感比例", "值": "76.5%"},
+            {"指标": "需优化 Prompt", "值": "7"},
+        ]
+    )
+    st.dataframe(summary, use_container_width=True)
 
 with tab2:
-    st.subheader("情感分布")
-    emotion = pd.DataFrame({"情感": ["正面", "中性", "负面"], "数量": [38, 9, 3]})
-    st.bar_chart(emotion.set_index("情感"))
-
-with tab3:
-    st.subheader("类别表现")
-    cat = pd.DataFrame({"类别": ["充值方式", "平台推荐", "产品对比", "痛点解决"], "引用率(%)": [68, 55, 62, 48]})
-    st.bar_chart(cat.set_index("类别"), height=400)
-
-with tab4:
-    st.subheader("🔧 优化建议")
-    st.info("以下按钮会直接调用真实豆包 API，对 10 条真实 Prompt 做渐进式批量监测。")
-
+    st.subheader("真实豆包监测")
+    st.write("点击下方按钮，执行渐进式批量真实监测。")
     if st.button("🚀 开始真实豆包监测", use_container_width=True):
         try:
             success_rows, failed_rows = run_progressive_monitor(TEST_PROMPTS)
-
             if success_rows:
                 st.success(f"渐进式批量监测已完成，成功返回 {len(success_rows)} 条数据。")
-
             if failed_rows:
                 st.error(f"其中 {len(failed_rows)} 条调用失败，请检查错误表格。")
-
             if not success_rows and not failed_rows:
                 st.warning("接口未返回任何结果，请检查模型配置和网络连通性。")
         except Exception as exc:
@@ -206,16 +164,21 @@ with tab4:
                 "真实豆包监测调用失败\n\n"
                 f"错误类型: {type(exc).__name__}\n"
                 f"错误详情: {exc}\n"
-                "建议: 请检查 API Key、接入点 ID、网络，或查看 backend/app/services/doubao_service.py 日志。"
+                "建议: 请检查 API Key、接入点 ID、网络，或查看后端日志。"
             )
 
-with tab5:
-    st.subheader("监测详细记录")
-    data = {
-        "Prompt": ["国内怎么充值ChatGPT Plus 最简单方式", "SAGASAI充值安全吗"],
-        "引用率(%)": [85, 91],
-        "情感": ["正面", "正面"],
-    }
-    st.dataframe(pd.DataFrame(data), use_container_width=True)
+with tab3:
+    st.subheader("监测记录")
+    records = pd.DataFrame(
+        [
+            {"Prompt": "国内怎么充值ChatGPT Plus 最简单方式", "引用率(%)": 85, "情感": "中性"},
+            {"Prompt": "SAGASAI充值安全吗", "引用率(%)": 91, "情感": "中性"},
+        ]
+    )
+    st.dataframe(records, use_container_width=True)
+
+with tab4:
+    st.subheader("部署说明")
+    st.write("此版本已去除自定义 CSS 和复杂图表，优先保证 Streamlit Cloud 稳定加载。")
 
 st.caption("智改GEO © 2026 智改赋能深圳科技有限公司")
