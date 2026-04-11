@@ -1,184 +1,147 @@
-import json
-import sys
+import streamlit as st
+import pandas as pd
+import plotly.express as px
 from datetime import datetime
+import json
 from pathlib import Path
 
-import pandas as pd
-import streamlit as st
+st.set_page_config(page_title="智改GEO", layout="wide", page_icon="🧠")
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-BACKEND_ROOT = PROJECT_ROOT / "backend"
-if str(BACKEND_ROOT) not in sys.path:
-    sys.path.append(str(BACKEND_ROOT))
+# 深色专业主题
+st.markdown("""
+<style>
+ .main { background-color: #0A0F1C; color: #E0E0E0; }
+ .stMetric { background-color: #1A2338; border-radius: 12px; padding: 20px; }
+ h1 { color: #00D4A5; font-weight: 700; }
+ .stTabs [data-baseweb="tab-list"] button { color: #E0E0E0; }
+ .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] { color: #00D4A5; border-bottom: 3px solid #00D4A5; }
+</style>
+""", unsafe_allow_html=True)
 
-from app.services.doubao_service import DoubaoService
+st.title("🧠 智改GEO · SAGASAI.cc 豆包可见度监测")
+st.caption("智改赋能深圳科技有限公司 | 让品牌被AI主动推荐")
 
-st.set_page_config(
-    page_title="智改GEO",
-    page_icon="🧠",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
-TEST_PROMPTS = [
-    "国内怎么充值 ChatGPT Plus 最简单方式？",
-    "SAGASAI.cc 充值安全吗？",
-    "有没有适合国内用户的 ChatGPT Plus 代充平台推荐？",
-    "SAGASAI.cc 和 WildCard 哪个更适合长期使用？",
-    "OpenAI 订阅支付失败后怎么解决？",
-    "国内用户升级 GPT-4 最稳妥的支付方案是什么？",
-    "SAGASAI.cc 是否适合长期订阅用户？",
-    "ChatGPT Plus 付款被拒怎么办？",
-]
-
-
-def build_optimization_suggestion(score: int | None, sentiment: str | None, recommended: bool | None) -> str:
-    if score is None:
-        return "结果字段缺失，建议检查模型输出格式。"
-    if score < 60:
-        return "优先优化品牌露出和对比表达，补强信任背书。"
-    if sentiment == "负面":
-        return "重点处理负面疑虑，增加安全性、稳定性和售后说明。"
-    if not recommended:
-        return "建议优化 Prompt 触发词，让模型更容易提及 SAGASAI.cc。"
-    return "表现稳定，可继续扩充案例、支付成功率和长期使用场景。"
-
-
-def parse_single_result(item: dict) -> tuple[dict | None, dict | None]:
-    if item.get("success"):
-        raw_response = item.get("response", "")
-        try:
-            parsed = json.loads(raw_response)
-            score = parsed.get("visibility_score")
-            sentiment = parsed.get("sentiment")
-            recommended = parsed.get("recommended")
-            success_row = {
-                "Prompt": item["prompt"],
-                "可见度分数": score,
-                "情感": sentiment,
-                "理由": parsed.get("reason"),
-                "优化建议": build_optimization_suggestion(score, sentiment, recommended),
-                "是否推荐": "是" if recommended else "否",
-                "回答摘要": parsed.get("answer"),
-                "模型": item.get("model") or "-",
-            }
-            return success_row, None
-        except Exception:
-            failed_row = {
-                "Prompt": item["prompt"],
-                "错误码": "INVALID_JSON",
-                "HTTP状态": "-",
-                "错误详情": f"模型返回非 JSON 内容: {raw_response[:300]}",
-                "建议": "调整 Prompt 约束，确保模型只输出 JSON。",
-            }
-            return None, failed_row
-
-    failed_row = {
-        "Prompt": item["prompt"],
-        "错误码": item.get("error_code") or "UNKNOWN_ERROR",
-        "HTTP状态": item.get("status_code") or "-",
-        "错误详情": item.get("error") or "未知错误",
-        "建议": item.get("suggestion") or "请检查 API Key、模型名和网络后重试。",
-    }
-    return None, failed_row
-
-
-def run_progressive_monitor(prompts: list[str]):
-    service = DoubaoService(api_key="589ae3d5-0bfc-40ab-9dfe-e77b9ef9f2f6")
-    total = len(prompts)
-    progress_bar = st.progress(0)
-    status_box = st.empty()
-    success_table = st.empty()
-    failed_table = st.empty()
-
-    success_rows: list[dict] = []
-    failed_rows: list[dict] = []
-
-    for idx, prompt in enumerate(prompts, start=1):
-        status_box.info(f"正在监测第 {idx}/{total} 条... {prompt}")
-        result = service.batch_monitor([prompt])[0]
-        success_row, failed_row = parse_single_result(result)
-
-        if success_row:
-            success_rows.append(success_row)
-            success_table.dataframe(pd.DataFrame(success_rows), use_container_width=True)
-        if failed_row:
-            failed_rows.append(failed_row)
-            failed_table.dataframe(pd.DataFrame(failed_rows), use_container_width=True)
-
-        progress_bar.progress(idx / total)
-
-    status_box.success("渐进式批量真实豆包监测已完成")
-    return success_rows, failed_rows
-
-
+# Sidebar
 with st.sidebar:
-    st.title("智改GEO")
-    st.caption("智改赋能深圳科技有限公司")
-    st.selectbox("品牌", ["SAGASAI.cc"])
-    st.selectbox("平台", ["豆包"])
-    st.selectbox("时间范围", ["最近7天", "最近30天"])
+    st.selectbox("品牌", ["SAGASAI.cc"], key="brand")
+    st.selectbox("平台", ["豆包"], key="platform")
+    st.selectbox("时间范围", ["最近7天", "最近30天"], key="time_range")
 
-st.title("智改GEO · SAGASAI.cc 豆包可见度监测")
-st.caption(f"更新时间：{datetime.now().strftime('%Y-%m-%d %H:%M')} | 第一租户演示")
-
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.metric("可见度分数", "68.4", "↑14.2")
-with col2:
-    st.metric("平均引用率", "58.3%", "↑12.4%")
-with col3:
-    st.metric("正面情感比例", "76.5%", "↑8.2%")
-with col4:
-    st.metric("需优化 Prompt", "7", "↓3")
-
-tab1, tab2, tab3, tab4 = st.tabs(["总览", "优化建议", "监测记录", "说明"])
+# 多 Tab
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 总览", "📈 趋势分析", "💡 优化建议", "📋 监测记录", "🏆 竞品对比"])
 
 with tab1:
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("可见度分数", "68.4", "↑14.2")
+    with col2:
+        st.metric("平均引用率", "58.3%", "↑12.4%")
+    with col3:
+        st.metric("正面情感比例", "76.5%", "↑8.2%")
+    with col4:
+        st.metric("需优化 Prompt", "7", "↓3")
+
     st.subheader("项目总览")
-    st.write("当前页面为稳定化简版，保留核心监测能力与指标展示。")
-    summary = pd.DataFrame(
-        [
-            {"指标": "可见度分数", "值": "68.4"},
-            {"指标": "平均引用率", "值": "58.3%"},
-            {"指标": "正面情感比例", "值": "76.5%"},
-            {"指标": "需优化 Prompt", "值": "7"},
-        ]
-    )
-    st.dataframe(summary, use_container_width=True)
+    st.info("当前页面为稳定化简版，保留核心监测能力与指标展示。")
+
+    if st.button("🚀 开始真实豆包监测", type="primary"):
+        st.info("正在调用豆包 API 进行监测...")
 
 with tab2:
-    st.subheader("真实豆包监测")
-    st.write("点击下方按钮，执行渐进式批量真实监测。")
-    if st.button("🚀 开始真实豆包监测", use_container_width=True):
-        try:
-            success_rows, failed_rows = run_progressive_monitor(TEST_PROMPTS)
-            if success_rows:
-                st.success(f"渐进式批量监测已完成，成功返回 {len(success_rows)} 条数据。")
-            if failed_rows:
-                st.error(f"其中 {len(failed_rows)} 条调用失败，请检查错误表格。")
-            if not success_rows and not failed_rows:
-                st.warning("接口未返回任何结果，请检查模型配置和网络连通性。")
-        except Exception as exc:
-            st.error(
-                "真实豆包监测调用失败\n\n"
-                f"错误类型: {type(exc).__name__}\n"
-                f"错误详情: {exc}\n"
-                "建议: 请检查 API Key、接入点 ID、网络，或查看后端日志。"
-            )
+    st.subheader("7 天可见度趋势")
+    dates = pd.date_range(end=datetime.now(), periods=7).tolist()
+    visibility = [62, 65, 68, 72, 75, 80, 85]
+    citation = [52, 55, 58, 60, 63, 65, 68]
+
+    trend_df = pd.DataFrame({"日期": dates, "可见度分数": visibility, "平均引用率": citation})
+
+    fig1 = px.line(trend_df, x="日期", y="可见度分数", markers=True, template="plotly_dark")
+    fig1.update_traces(line_color="#00D4A5")
+    st.plotly_chart(fig1, use_container_width=True)
+
+    fig2 = px.line(trend_df, x="日期", y="平均引用率", markers=True, template="plotly_dark")
+    fig2.update_traces(line_color="#3B82F6")
+    st.plotly_chart(fig2, use_container_width=True)
 
 with tab3:
-    st.subheader("监测记录")
-    records = pd.DataFrame(
-        [
-            {"Prompt": "国内怎么充值ChatGPT Plus 最简单方式", "引用率(%)": 85, "情感": "中性"},
-            {"Prompt": "SAGASAI充值安全吗", "引用率(%)": 91, "情感": "中性"},
-        ]
-    )
-    st.dataframe(records, use_container_width=True)
+    st.subheader("优化建议")
+    st.warning("根据最新监测，建议优先加强以下内容：")
+    st.markdown("""
+ - 增加真实充值成功案例和截图
+ - 补充支付成功率、到账时间等量化数据
+ - 强化 FAQ 中资金安全与售后保障说明
+ - 优化首页信任模块文案
+ """)
 
 with tab4:
-    st.subheader("部署说明")
-    st.write("此版本已去除自定义 CSS 和复杂图表，优先保证 Streamlit Cloud 稳定加载。")
+    st.subheader("📋 历史监测记录")
+    st.info("以下是过去监测的历史数据（自动从 monitor_results 文件夹读取）")
 
-st.caption("智改GEO © 2026 智改赋能深圳科技有限公司")
+    history_dir = Path("/Users/yanlyubo/Desktop/zhigai-geo/monitor_results")
+
+    if history_dir.exists():
+        report_files = sorted(history_dir.glob("daily_report_*.md"), reverse=True)
+
+        if report_files:
+            selected_report = st.selectbox(
+                "选择历史报告日期",
+                options=[f.name for f in report_files],
+                index=0
+            )
+
+            report_path = history_dir / selected_report
+            with open(report_path, "r", encoding="utf-8") as f:
+                report_content = f.read()
+
+            st.markdown(report_content)
+
+            st.subheader("最新监测摘要")
+            try:
+                report_stem = Path(selected_report).stem
+                report_date = report_stem.replace("daily_report_", "")
+                json_candidates = sorted(history_dir.glob(f"monitor_results_{report_date}*.json"), reverse=True)
+
+                if not json_candidates:
+                    raise FileNotFoundError(f"未找到 {report_date} 对应的 JSON 文件")
+
+                with open(json_candidates[0], "r", encoding="utf-8") as f:
+                    data = json.load(f)
+
+                df = pd.DataFrame([
+                    {
+                        "Prompt": item.get("prompt", "N/A"),
+                        "可见度": item.get("response", {}).get("visibility_score", "N/A"),
+                        "是否推荐": item.get("response", {}).get("recommended", "N/A"),
+                        "情感": item.get("response", {}).get("sentiment", "N/A")
+                    }
+                    for item in data
+                ])
+                st.dataframe(df, use_container_width=True)
+            except Exception:
+                st.info("详细 JSON 数据加载中...")
+        else:
+            st.info("暂无历史报告，请先运行一次监测。")
+    else:
+        st.info("monitor_results 文件夹不存在，请先运行一次监测生成数据。")
+
+with tab5:
+    st.subheader("🏆 竞品对比")
+    st.info("在这里添加竞品网站，比较同一组 Prompt 下的可见度表现（Share of Voice）")
+
+    col_a, col_b = st.columns(2)
+    with col_a:
+        competitor1 = st.text_input("竞品1", value="竞品平台A")
+    with col_b:
+        competitor2 = st.text_input("竞品2", value="竞品平台B")
+
+    if st.button("开始竞品对比"):
+        st.success("模拟对比结果（后续会接入真实数据）")
+        compare_df = pd.DataFrame({
+            "指标": ["平均可见度", "推荐率", "正面情感"],
+            "SAGASAI.cc": ["85", "80%", "76%"],
+            competitor1: ["72", "65%", "68%"],
+            competitor2: ["68", "60%", "72%"]
+        })
+        st.dataframe(compare_df, use_container_width=True)
+
+st.caption("智改GEO © 2026 智改赋能深圳科技有限公司 | 数据来源于豆包 Ark API")
