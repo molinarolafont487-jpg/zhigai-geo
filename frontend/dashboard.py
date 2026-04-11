@@ -1,153 +1,265 @@
+"""智改GEO 客户后台 V2 — 总览页"""
+import sys, os
+sys.path.insert(0, os.path.dirname(__file__))
+
 import streamlit as st
-import pandas as pd
+import plotly.graph_objects as go
 import plotly.express as px
+import pandas as pd
 from datetime import datetime
-import json
-from pathlib import Path
 
-st.set_page_config(page_title="智改GEO", layout="wide", page_icon="🧠")
+from styles import inject_css, status_bar, kpi_card, conclusion_box, section_header, sidebar_brand, BRAND, GREEN, RED, YELLOW, BLUE, GRAY
+from data import (
+    get_brand_metrics, get_trend_data, get_questions,
+    get_suggestions, get_deliveries, get_weekly_changes,
+    get_last_update_time, BRANDS, PLATFORMS
+)
 
-# 深色专业主题
-st.markdown("""
-<style>
- .main { background-color: #0A0F1C; color: #E0E0E0; }
- .stMetric { background-color: #1A2338; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
- h1 { color: #00D4A5; font-weight: 700; }
- .block-container { padding-top: 2rem; }
-</style>
-""", unsafe_allow_html=True)
+st.set_page_config(
+    page_title="智改GEO 后台",
+    layout="wide",
+    page_icon="🧠",
+    initial_sidebar_state="expanded",
+)
+inject_css()
 
-# ==================== 左侧侧边栏（必须保留） ====================
+# ══════════════════════════════════════════
+#  侧边栏
+# ══════════════════════════════════════════
 with st.sidebar:
- st.image("https://via.placeholder.com/200x60/00D4A5/0A0F1C?text=智改GEO", width=200)
- 
- st.subheader("品牌选择")
- brand = st.selectbox("当前监测品牌", ["SAGASAI.cc", "塞那SANAG"], key="brand")
- 
- st.subheader("监测平台")
- platform = st.selectbox("平台", ["豆包", "Kimi"], key="platform")
- 
- st.subheader("时间范围")
- time_range = st.selectbox("时间范围", ["最近7天", "最近30天"], key="time_range")
- 
- st.divider()
- 
- st.subheader("快速操作")
- if st.button("🚀 开始实时监测", type="primary", use_container_width=True):
-  st.session_state.run_monitor = True
-  st.rerun()
- 
- if st.button("📊 导出本周报告", use_container_width=True):
-  st.success("报告已导出")
- 
- if st.button("🔄 刷新数据", use_container_width=True):
-  st.rerun()
- 
- st.divider()
- 
- st.subheader("状态")
- st.caption(f"品牌：{brand}")
- st.caption(f"平台：{platform}")
- st.caption("状态：正常 ✅")
+    sidebar_brand()
 
-# ==================== 主页面标题 ====================
+    st.markdown('<p style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#c4b5fd;margin-bottom:6px">品牌</p>', unsafe_allow_html=True)
+    brand = st.selectbox("品牌", list(BRANDS.keys()), label_visibility="collapsed", key="brand")
+
+    st.markdown('<p style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#c4b5fd;margin:14px 0 6px">监测平台</p>', unsafe_allow_html=True)
+    platform = st.selectbox("平台", PLATFORMS, label_visibility="collapsed", key="platform")
+
+    st.markdown('<p style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#c4b5fd;margin:14px 0 6px">时间范围</p>', unsafe_allow_html=True)
+    time_range = st.radio("时间", ["最近 7 天", "最近 30 天"], label_visibility="collapsed", key="time_range")
+
+    st.markdown("<hr style='border-color:rgba(124,58,237,0.2);margin:20px 0'>", unsafe_allow_html=True)
+
+    if st.button("🔄  刷新数据", use_container_width=True):
+        st.rerun()
+
+    st.markdown("<hr style='border-color:rgba(124,58,237,0.2);margin:16px 0'>", unsafe_allow_html=True)
+    st.markdown("""
+    <div style="font-size:11px;color:#7c3aed;font-weight:600;margin-bottom:8px">页面导航</div>
+    """, unsafe_allow_html=True)
+    pages = {
+        "📊  总览": None,
+        "📡  平台监控": "pages/2_平台监控",
+        "🔍  类目/问题监控": "pages/3_类目问题监控",
+        "⚡  优化建议": "pages/4_优化建议",
+        "📄  报告中心": "pages/5_报告中心",
+    }
+    for name in pages:
+        is_active = name.startswith("📊")
+        bg = "rgba(124,58,237,0.2)" if is_active else "transparent"
+        fw = "700" if is_active else "500"
+        st.markdown(f"""
+        <div style="padding:8px 12px;border-radius:8px;background:{bg};color:#e9d5ff;font-size:13px;font-weight:{fw};margin-bottom:2px">
+            {name}
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<hr style='border-color:rgba(124,58,237,0.2);margin:16px 0'>", unsafe_allow_html=True)
+    st.markdown('<div style="font-size:11px;color:#6b21a8;text-align:center">智改赋能深圳科技有限公司<br>© 2026</div>', unsafe_allow_html=True)
+
+# ══════════════════════════════════════════
+#  加载数据
+# ══════════════════════════════════════════
+days = 7 if time_range == "最近 7 天" else 30
+m = get_brand_metrics(brand, platform)
+trend_df = get_trend_data(brand, days)
+questions = get_questions(brand)
+suggestions = get_suggestions(brand)
+deliveries = get_deliveries(brand)
+changes = get_weekly_changes(brand)
+last_update = get_last_update_time()
+
+# ══════════════════════════════════════════
+#  页头
+# ══════════════════════════════════════════
 st.markdown("""
- <div style="text-align: center; padding: 20px 0;">
- <h1 style="color: #00D4A5; font-size: 2.8rem;">🤖 智改GEO</h1>
- <h2 style="color: #e2e8f0;">多平台 AI 可见度监测系统</h2>
- <p style="color: #94a3b8;">深圳智改赋能科技有限公司 | 让品牌被 AI 主动推荐</p>
- </div>
+<div class="page-header">
+    <p class="page-title">📊 &nbsp;总览</p>
+    <p class="page-sub">品牌 AI 可见度全局概览 — 先结论，后数据</p>
+</div>
 """, unsafe_allow_html=True)
 
-st.markdown(f"""
- <div style="background-color: #1f2937; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 25px;">
- 当前监测品牌：<span style="color:#00D4A5; font-weight:600;">{brand}</span> | 平台：<span style="color:#00D4A5;">{platform}</span>
- </div>
-""", unsafe_allow_html=True)
+# ── 状态条 ──
+status_bar(brand, platform, m["score"], last_update)
 
-if platform == "Kimi":
- st.info("🔄 Kimi 监测功能正在接入中…（需要 API Key 已配置）")
+# ── 一句话结论 ──
+score = m["score"]
+uncovered = m["uncovered_count"]
+rec_rate = m["recommend_rate"]
 
-if brand == "塞那SANAG":
- st.info("当前监测品牌：Sanag.cn（塞那SANAG智能耳机）")
- target_site = "https://www.sanag.cn/"
-elif brand == "其他客户":
- st.info("当前监测品牌：其他客户（待配置）")
- target_site = ""
+if score >= 80 and uncovered <= 1:
+    conclusion = f"本周 {brand} 表现良好，AI推荐覆盖率达 {rec_rate:.0f}%，整体可见度评分 {score}（{m['grade']}）。仍有 {uncovered} 个高价值场景待覆盖，建议本周优先处理。"
+elif score >= 65:
+    conclusion = f"{brand} 正在进入 AI 推荐路径，当前评分 {score}，推荐覆盖率 {rec_rate:.0f}%。有 {uncovered} 个高频场景未被覆盖，这是当前最大流量缺口。"
 else:
- st.info("当前监测品牌：SAGASAI.cc")
- target_site = "https://sagasai.cc/"
+    conclusion = f"{brand} 当前 AI 可见度较低（{score}分），仅 {rec_rate:.0f}% 的问题场景被推荐。{uncovered} 个高价值场景完全未覆盖，需要立即启动内容结构改造。"
 
-# ==================== 8 个大指标卡 ====================
+conclusion_box(conclusion)
+
+# ══════════════════════════════════════════
+#  四大核心指标
+# ══════════════════════════════════════════
+section_header("核心指标", "点击各指标可查看详情")
+
 col1, col2, col3, col4 = st.columns(4)
+score_color = GREEN if score >= 80 else YELLOW if score >= 65 else RED
 with col1:
- st.metric("可见度分数", "85.0", "↑16.6")
+    st.markdown(kpi_card(f"{score}", "AI 可见度评分", f"↑ +{m['delta_score']:.1f}", True, score_color), unsafe_allow_html=True)
 with col2:
- st.metric("平均引用率", "58.3%", "↑12.4%")
+    st.markdown(kpi_card(f"{m['mentioned_rate']:.0f}%", "被推荐率", f"↑ +{m['delta_mentioned']:.1f}%", True, BLUE), unsafe_allow_html=True)
 with col3:
- st.metric("正面情感比例", "76.5%", "↑8.2%")
+    st.markdown(kpi_card(f"{m['total_prompts'] - uncovered}/{m['total_prompts']}", "覆盖问题数", f"共测试 {m['total_prompts']} 条", True, GREEN), unsafe_allow_html=True)
 with col4:
- st.metric("需优化 Prompt", "7", "↓3")
+    uncov_color = RED if uncovered >= 3 else YELLOW if uncovered >= 1 else GREEN
+    st.markdown(kpi_card(f"{uncovered}", "未覆盖场景", "⚠️ 需关注" if uncovered > 0 else "✅ 全覆盖", uncovered == 0, uncov_color), unsafe_allow_html=True)
 
-col5, col6, col7, col8 = st.columns(4)
-with col5:
- st.metric("最高可见度", "95", "↑5")
-with col6:
- st.metric("推荐比例", "100%", "↑20%")
-with col7:
- st.metric("平均响应时间", "2.1s", "↓0.3s")
-with col8:
- st.metric("本周新增 Prompt", "12", "↑4")
+# ══════════════════════════════════════════
+#  趋势图
+# ══════════════════════════════════════════
+section_header("趋势变化", f"过去 {days} 天 AI 可见度与引用率走势")
 
-# ==================== 总体总结 ====================
-st.subheader("项目总览")
-st.info("平均可见度 85.0 | 推荐比例 100% | 最高可见度 95 | 最低可见度 80")
+fig = go.Figure()
+fig.add_trace(go.Scatter(
+    x=trend_df["日期"], y=trend_df["AI可见度评分"],
+    name="AI可见度评分", mode="lines+markers",
+    line=dict(color=BRAND, width=2.5),
+    marker=dict(size=5, color=BRAND),
+    fill="tozeroy", fillcolor="rgba(124,58,237,0.06)",
+))
+fig.add_trace(go.Scatter(
+    x=trend_df["日期"], y=trend_df["被引用率(%)"],
+    name="被引用率(%)", mode="lines+markers",
+    line=dict(color=BLUE, width=2, dash="dot"),
+    marker=dict(size=4, color=BLUE),
+))
+fig.update_layout(
+    height=260,
+    margin=dict(l=0, r=0, t=10, b=0),
+    paper_bgcolor="white",
+    plot_bgcolor="white",
+    font=dict(family="sans-serif", size=12, color="#374151"),
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    xaxis=dict(showgrid=False, tickformat="%m/%d", tickfont=dict(size=11)),
+    yaxis=dict(showgrid=True, gridcolor="#f3f4f6", range=[0, 105], ticksuffix=""),
+    hovermode="x unified",
+)
+fig.add_annotation(
+    x=trend_df["日期"].iloc[-1], y=trend_df["AI可见度评分"].iloc[-1],
+    text=f" {score}↑", showarrow=False,
+    font=dict(size=12, color=BRAND, family="sans-serif"),
+    xanchor="left",
+)
+st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
-# ==================== 趋势图 ====================
-st.subheader("趋势分析（最近7天）")
-dates = pd.date_range(end=datetime.now(), periods=7).tolist()
-visibility = [62, 65, 68, 72, 75, 80, 85]
-citation = [52, 55, 58, 60, 63, 65, 68]
+# ══════════════════════════════════════════
+#  本周关键变化
+# ══════════════════════════════════════════
+section_header("本周关键变化", "影响 AI 可见度的重要变化")
 
-trend_df = pd.DataFrame({"日期": dates, "可见度分数": visibility, "平均引用率": citation})
+for c in changes:
+    if c["type"] == "up":
+        icon, bg, border, tc = "↑", "#f0fdf4", "rgba(16,185,129,0.25)", "#065f46"
+    else:
+        icon, bg, border, tc = "⚠", "#fffbeb", "rgba(245,158,11,0.3)", "#78350f"
+    st.markdown(f"""
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;
+        background:{bg};border:1px solid {border};margin-bottom:6px">
+        <span style="font-size:14px;font-weight:900;color:{tc};width:16px;text-align:center">{icon}</span>
+        <span style="font-size:13px;color:{tc};font-weight:500">{c['text']}</span>
+    </div>
+    """, unsafe_allow_html=True)
 
-fig1 = px.line(trend_df, x="日期", y="可见度分数", markers=True, template="plotly_dark", title="可见度分数趋势")
-fig1.update_traces(line_color="#00D4A5")
-st.plotly_chart(fig1, use_container_width=True)
+# ══════════════════════════════════════════
+#  两列：未覆盖问题 + 优化建议
+# ══════════════════════════════════════════
+col_left, col_right = st.columns([1, 1], gap="large")
 
-fig2 = px.line(trend_df, x="日期", y="平均引用率", markers=True, template="plotly_dark", title="平均引用率趋势")
-fig2.update_traces(line_color="#3B82F6")
-st.plotly_chart(fig2, use_container_width=True)
+with col_left:
+    section_header("未覆盖高价值问题", "这些场景是当前流量缺口")
 
-# ==================== 优化建议 ====================
-st.subheader("💡 优化建议")
-st.warning("根据最新监测，建议优先加强以下内容：")
-st.markdown("""
-- 增加真实充值成功案例和截图
-- 补充支付成功率、到账时间等量化数据
-- 强化 FAQ 中资金安全与售后保障说明
-- 优化首页信任模块文案
-""")
+    if questions["missing"]:
+        for q in questions["missing"]:
+            st.markdown(f"""
+            <div class="q-missing">
+                <span style="font-weight:700;margin-right:6px">✘</span>
+                {q}<span style="float:right;font-size:11px;opacity:0.7">竞品可替代</span>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.markdown('<div style="color:#10b981;font-size:14px;font-weight:600">✅ 所有高价值问题均已覆盖</div>', unsafe_allow_html=True)
 
-# ==================== 历史记录 ====================
-st.subheader("📋 历史监测记录")
-st.info("以下是过去监测的历史数据（自动从 monitor_results 文件夹读取）")
+    if questions["covered"]:
+        with st.expander(f"已覆盖问题（{len(questions['covered'])} 条）", expanded=False):
+            for q in questions["covered"]:
+                st.markdown(f'<div class="q-covered"><span style="font-weight:700;margin-right:6px">✔</span>{q}</div>', unsafe_allow_html=True)
 
-history_dir = Path("/Users/yanlyubo/Desktop/zhigai-geo/monitor_results")
-if history_dir.exists():
- report_files = sorted(history_dir.glob("daily_report_*.md"), reverse=True)
- if report_files:
-  selected_report = st.selectbox("选择历史报告日期", options=[f.name for f in report_files], index=0)
-  report_path = history_dir / selected_report
-  with open(report_path, "r", encoding="utf-8") as f:
-   st.markdown(f.read())
- else:
-  st.info("暂无历史报告，请先运行一次监测。")
-else:
- st.info("monitor_results 文件夹不存在，请先运行一次监测生成数据。")
+with col_right:
+    section_header("下一步优化建议", "按优先级排序，可直接执行")
 
-# ==================== 真实监测按钮 ====================
-if st.button("🚀 开始真实豆包监测", type="primary"):
- st.info("正在调用豆包 API 进行监测...")
+    pri_style = {"高": "priority-high", "中": "priority-mid", "低": "priority-low"}
+    for s in suggestions[:3]:
+        st.markdown(f"""
+        <div class="action-row">
+            <span class="{pri_style.get(s['pri'], 'priority-low')}">{s['pri']}</span>
+            <div style="flex:1">
+                <div style="font-size:13px;font-weight:600;color:#111827">{s['title']}</div>
+                <div style="font-size:11px;color:#6b7280;margin-top:2px">{s['impact']}</div>
+            </div>
+            <span style="font-size:11px;color:#a78bfa">→</span>
+        </div>
+        """, unsafe_allow_html=True)
 
-st.caption("智改GEO © 2026 智改赋能深圳科技有限公司 | 数据来源于豆包 Ark API")
+    with st.expander("查看全部建议", expanded=False):
+        for s in suggestions[3:]:
+            st.markdown(f"""
+            <div class="action-row">
+                <span class="{pri_style.get(s['pri'], 'priority-low')}">{s['pri']}</span>
+                <div style="flex:1">
+                    <div style="font-size:13px;font-weight:600;color:#111827">{s['title']}</div>
+                    <div style="font-size:11px;color:#6b7280;margin-top:2px">{s['impact']}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+# ══════════════════════════════════════════
+#  最近交付动作
+# ══════════════════════════════════════════
+section_header("最近交付动作", "顾问团队已完成的工作")
+
+type_colors = {"诊断": BRAND, "报告": BLUE, "方案": GREEN, "监测": YELLOW, "分析": "#f59e0b"}
+for d in deliveries:
+    tc = type_colors.get(d["type"], GRAY)
+    st.markdown(f"""
+    <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f3f4f6;align-items:center">
+        <div style="width:8px;height:8px;border-radius:50%;background:{tc};flex-shrink:0;margin-top:2px"></div>
+        <div style="flex:1;font-size:13px;color:#374151">{d['action']}</div>
+        <div style="font-size:11px;color:#9ca3af;flex-shrink:0">{d['date']}</div>
+        <div style="font-size:10px;font-weight:700;color:{tc};background:{tc}18;padding:2px 8px;border-radius:99px;flex-shrink:0">{d['type']}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ══════════════════════════════════════════
+#  底部 CTA
+# ══════════════════════════════════════════
+st.markdown("<div style='height:32px'></div>", unsafe_allow_html=True)
+
+col_a, col_b, col_c = st.columns([1, 1, 2])
+with col_a:
+    if st.button("📄  导出本期报告", type="primary", use_container_width=True):
+        st.success("✅ 报告生成中，请稍候…（功能开发中）")
+with col_b:
+    if st.button("💬  联系顾问", use_container_width=True):
+        st.info("顾问微信：zggeo_service | 工作日 9:00–18:00")
+with col_c:
+    src_label = "（数据来源：真实监测）" if m.get("source") == "real" else "（数据为演示样例）"
+    st.markdown(f'<p style="font-size:12px;color:#9ca3af;padding-top:8px">智改赋能深圳科技有限公司 · zggeo.com.cn &nbsp;{src_label}</p>', unsafe_allow_html=True)
