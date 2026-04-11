@@ -76,8 +76,9 @@ class DoubaoService:
 待监测 Prompt：{prompt}
 """.strip()
 
-    def query_doubao(self, prompt: str, model: str | None = None) -> Dict[str, Any]:
+    def query_doubao(self, prompt: str, model: str | None = None, timeout: int | None = None) -> Dict[str, Any]:
         models = [model] if model else self.candidate_models
+        request_timeout = timeout or self.timeout
 
         for model_name in models:
             payload = {
@@ -99,7 +100,7 @@ class DoubaoService:
             )
 
             try:
-                with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                with urllib.request.urlopen(request, timeout=request_timeout) as response:
                     body = response.read().decode("utf-8", "replace")
                     parsed = json.loads(body)
                     text = self._extract_text(parsed)
@@ -152,20 +153,51 @@ class DoubaoService:
             "suggestion": "请检查 candidate_models 配置。",
         }
 
-    def batch_monitor(self, prompts: List[str]) -> List[Dict[str, Any]]:
+    def parse_geo_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
+        if not response.get("success"):
+            return {
+                "error": response.get("error") or "请求失败",
+                "error_code": response.get("error_code"),
+                "status_code": response.get("status_code"),
+                "suggestion": response.get("suggestion"),
+            }
+
+        text = response.get("text", "")
+        if not text:
+            return {"error": "响应为空"}
+
+        try:
+            return json.loads(text)
+        except Exception:
+            return {
+                "raw_text": text,
+                "error": "响应不是合法 JSON",
+            }
+
+    def batch_monitor(self, prompts: List[str], timeout: int = 60) -> List[Dict[str, Any]]:
         results: List[Dict[str, Any]] = []
-        for prompt in prompts:
-            result = self.query_doubao(self._build_monitor_prompt(prompt))
-            results.append(
-                {
-                    "prompt": prompt,
-                    "success": result["success"],
-                    "model": result["model"],
-                    "response": result["text"],
-                    "error": result["error"],
-                    "error_code": result.get("error_code"),
-                    "status_code": result.get("status_code"),
-                    "suggestion": result.get("suggestion"),
-                }
-            )
+        for i, prompt in enumerate(prompts):
+            try:
+                print(f"正在监测第 {i + 1}/{len(prompts)} 条: {prompt[:60]}...")
+
+                response = self.query_doubao(self._build_monitor_prompt(prompt), timeout=timeout)
+                parsed = self.parse_geo_response(response)
+
+                results.append(
+                    {
+                        "prompt": prompt,
+                        "response": parsed,
+                        "success": True,
+                    }
+                )
+            except Exception as e:
+                results.append(
+                    {
+                        "prompt": prompt,
+                        "response": {"error": str(e)},
+                        "success": False,
+                    }
+                )
+                print(f"第 {i + 1} 条监测失败: {str(e)}")
+
         return results
