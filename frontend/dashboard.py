@@ -22,11 +22,44 @@ st.caption("智改赋能深圳科技有限公司 | 让品牌被AI主动推荐")
 
 # Sidebar
 with st.sidebar:
- brand = st.selectbox("品牌", ["SAGASAI.cc", "Sanag / 塞那SANAG"], key="brand")
- st.selectbox("平台", ["豆包"], key="platform")
- st.selectbox("时间范围", ["最近7天", "最近30天"], key="time_range")
+ st.image("https://via.placeholder.com/180x60/00D4A5/0A0F1C?text=智改GEO", width=180)
+ 
+ st.subheader("品牌选择")
+ brand = st.selectbox("品牌", ["SAGASAI.cc", "塞那SANAG"], key="brand")
+ 
+ st.subheader("平台与时间")
+ platform = st.selectbox("平台", ["豆包", "Kimi"], key="platform")
+ time_range = st.selectbox("时间范围", ["最近7天", "最近30天"], key="time_range")
+ 
+ st.divider()
+ 
+ st.subheader("快速操作")
+ if st.button("🚀 开始实时监测", type="primary", use_container_width=True):
+  st.session_state.run_monitor = True
+  st.rerun()
+ 
+ if st.button("📊 导出本周报告", use_container_width=True):
+  st.success("报告已导出（模拟）")
+ 
+ if st.button("🔄 刷新所有数据", use_container_width=True):
+  st.rerun()
+ 
+ st.divider()
+ 
+ st.subheader("状态信息")
+ st.caption(f"当前品牌：{brand}")
+ st.caption("最后监测：刚刚")
+ st.caption("系统状态：正常运行")
+ 
+ st.divider()
+ 
+ st.subheader("快捷导航")
+ st.markdown("- 💡 优化建议")
+ st.markdown("- 📈 趋势分析")
+ st.markdown("- 📋 历史记录")
+ st.markdown("- 🏆 竞品对比")
 
-if brand == "Sanag / 塞那SANAG":
+if brand == "塞那SANAG":
  st.info("当前监测品牌：Sanag.cn（塞那SANAG智能耳机）")
  target_site = "https://www.sanag.cn/"
 else:
