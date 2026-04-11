@@ -98,6 +98,13 @@ def run_daily_monitor():
    f.write("\n⚠️ **风险提示**：部分 Prompt 可见度较低，建议优先优化相关内容。\n")
  
   f.write("\n**优化建议**：重点加强真实案例、支付成功率和长期使用场景描述，以提升整体推荐强度。\n")
+  f.write("\n## AI 自动优化建议\n")
+  if avg_visibility < 80:
+   f.write("建议立即加强真实案例和支付成功率说明。\n")
+  elif min_visibility < 75:
+   f.write("建议重点优化可见度较低的 Prompt（如 " + min_prompt + "）。\n")
+  else:
+   f.write("当前表现良好，继续保持案例更新和信任模块维护。\n")
 
  print(f"监测完成！")
  print(f"原始结果保存至: {json_path}")

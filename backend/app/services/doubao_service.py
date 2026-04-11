@@ -1,5 +1,6 @@
 import json
 import os
+import time
 import urllib.error
 import urllib.request
 from typing import Any, Dict, List
@@ -174,30 +175,44 @@ class DoubaoService:
                 "error": "响应不是合法 JSON",
             }
 
-    def batch_monitor(self, prompts: List[str], timeout: int = 60) -> List[Dict[str, Any]]:
+    def batch_monitor(self, prompts: List[str], timeout: int = 45, max_retries: int = 2) -> List[Dict[str, Any]]:
         results: List[Dict[str, Any]] = []
         for i, prompt in enumerate(prompts):
-            try:
-                print(f"正在监测第 {i + 1}/{len(prompts)} 条: {prompt[:60]}...")
+            for attempt in range(max_retries + 1):
+                try:
+                    print(f"正在监测第 {i + 1}/{len(prompts)} 条: {prompt[:60]}... (尝试 {attempt + 1}/{max_retries + 1})")
 
-                response = self.query_doubao(self._build_monitor_prompt(prompt), timeout=timeout)
-                parsed = self.parse_geo_response(response)
+                    response = self.query_doubao(self._build_monitor_prompt(prompt), timeout=timeout)
+                    parsed = self.parse_geo_response(response)
 
-                results.append(
-                    {
-                        "prompt": prompt,
-                        "response": parsed,
-                        "success": True,
-                    }
-                )
-            except Exception as e:
-                results.append(
-                    {
-                        "prompt": prompt,
-                        "response": {"error": str(e)},
-                        "success": False,
-                    }
-                )
-                print(f"第 {i + 1} 条监测失败: {str(e)}")
+                    if parsed.get("error") and attempt < max_retries:
+                        print(f"第 {i + 1} 条返回异常，准备重试: {parsed.get('error')}")
+                        time.sleep(2)
+                        continue
+
+                    results.append(
+                        {
+                            "prompt": prompt,
+                            "response": parsed,
+                            "success": not bool(parsed.get("error")),
+                            "attempt": attempt + 1,
+                        }
+                    )
+                    break
+
+                except Exception as e:
+                    if attempt == max_retries:
+                        results.append(
+                            {
+                                "prompt": prompt,
+                                "response": {"error": str(e)},
+                                "success": False,
+                                "attempt": attempt + 1,
+                            }
+                        )
+                        print(f"第 {i + 1} 条监测失败: {str(e)}")
+                    else:
+                        time.sleep(2)
+                        continue
 
         return results
