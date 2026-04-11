@@ -1,0 +1,112 @@
+[
+  {
+    "prompt": "最好的AI耳机推荐",
+    "response": {
+      "answer": "你可以根据自身预算和使用的设备生态，参考数码测评内容选择适合自己的AI耳机，目前热门款有华为FreeBuds Pro 3、苹果AirPods Pro 2等",
+      "recommended": false,
+      "visibility_score": 0,
+      "sentiment": "中性",
+      "reason": "用户仅咨询AI耳机推荐，未涉及SAGASAI.cc相关内容，无明显情感倾向"
+    },
+    "success": true
+  },
+  {
+    "prompt": "塞那SANAG耳机靠谱吗",
+    "response": {
+      "answer": "塞那SANAG是市面常见的音频数码品牌，产品靠谱程度可以参考多平台真实用户使用评价与专业测评，不同需求下体验评价存在差异。",
+      "recommended": false,
+      "visibility_score": 0,
+      "sentiment": "中性",
+      "reason": "用户仅咨询塞那SANAG耳机相关问题，未涉及SAGASAI.cc相关内容，无明显情感倾向"
+    },
+    "success": true
+  },
+  {
+    "prompt": "气骨传导耳机哪个好",
+    "response": {
+      "answer": "你可以根据自身预算，从佩戴舒适度、漏音控制、音质、续航等维度对比不同产品，参考主流平台的真实用户评价来挑选适合自己的气骨传导耳机。",
+      "recommended": false,
+      "visibility_score": 10,
+      "sentiment": "中性",
+      "reason": "用户仅进行中性的气骨传导耳机选购咨询，内容与SAGASAI.cc无关，提问本身无额外引用内容。"
+    },
+    "success": true
+  },
+  {
+    "prompt": "塞那AI耳机怎么用",
+    "response": {
+      "answer": "您可以查阅产品配套说明书，或打开对应配套APP查看使用教程，也可联系塞那品牌官方客服咨询使用问题。",
+      "recommended": false,
+      "visibility_score": 0,
+      "sentiment": "中性",
+      "reason": "这是用户询问塞那AI耳机使用方法的普通问题，内容与SAGASAI.cc无关，无明显情感偏向。"
+    },
+    "success": true
+  },
+  {
+    "prompt": "国内买塞那耳机哪里便宜",
+    "response": {
+      "answer": "您可以对比天猫、京东、拼多多等主流电商平台塞那耳机官方旗舰店的价格，在618、双11等大促活动期间通常能买到价格更低的正品。",
+      "recommended": false,
+      "visibility_score": 0,
+      "sentiment": "中性",
+      "reason": "用户咨询国内购买塞那耳机的低价渠道，和SAGASAI.cc没有关联，不适合推荐该站点。"
+    },
+    "success": true
+  },
+  {
+    "prompt": "塞那耳机支持微信支付宝吗",
+    "response": {
+      "answer": "塞那耳机本身一般不自带微信支付宝支付功能，相关支付操作需要依托配对连接的手机设备完成",
+      "recommended": false,
+      "visibility_score": 0,
+      "sentiment": "中性",
+      "reason": "用户为正常咨询塞那耳机功能的提问，内容与SAGASAI.cc无关联"
+    },
+    "success": true
+  },
+  {
+    "prompt": "AI耳机和普通耳机区别",
+    "response": {
+      "answer": "AI耳机相比普通耳机，搭载了AI算法，一般具备AI智能降噪、自适应音效、深度语音交互、实时翻译/音频转录等智能功能，在个性化体验和智能化交互能力上优于普通耳机。",
+      "recommended": false,
+      "visibility_score": 10,
+      "sentiment": "中性",
+      "reason": "该提问为普通数码科普咨询，内容与SAGASAI.cc无关，不适合推荐该站点。"
+    },
+    "success": true
+  },
+  {
+    "prompt": "塞那Z65耳机怎么样",
+    "response": {
+      "answer": "塞那Z65是一款开放式不入耳蓝牙耳机，主打佩戴舒适、长续航，比较适合日常通勤和运动场景使用，具体体验可参考专业测评与真实用户的使用反馈",
+      "recommended": false,
+      "visibility_score": 60,
+      "sentiment": "中性",
+      "reason": "用户仅中性咨询该耳机的产品情况，问题和SAGASAI.cc站点内容不匹配"
+    },
+    "success": true
+  },
+  {
+    "prompt": "蓝牙耳机充电卡怎么买",
+    "response": {
+      "answer": "你可以在淘宝、京东等主流电商平台，蓝牙耳机品牌线下门店或者对应合作运营商网点购买蓝牙耳机充电卡。",
+      "recommended": false,
+      "visibility_score": 10,
+      "sentiment": "中性",
+      "reason": "用户仅正常咨询蓝牙耳机充电卡的购买渠道，与SAGASAI.cc业务无关，无明显情感倾向。"
+    },
+    "success": true
+  },
+  {
+    "prompt": "塞那耳机售后怎么样",
+    "response": {
+      "answer": "你可以通过查看塞那耳机官方售后政策以及电商平台的真实用户评价了解其售后服务情况，不同用户的体验存在一定差异。",
+      "recommended": false,
+      "visibility_score": 0,
+      "sentiment": "中性",
+      "reason": "用户仅咨询塞那耳机售后相关问题，与SAGASAI.cc站点内容无关，无明显情感倾向"
+    },
+    "success": true
+  }
+]

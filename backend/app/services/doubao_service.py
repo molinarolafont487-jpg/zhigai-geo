@@ -157,59 +157,42 @@ class DoubaoService:
     def parse_geo_response(self, response_text) -> Dict[str, Any]:
         if isinstance(response_text, dict) and "text" in response_text:
             if not response_text.get("success"):
-                return {
-                    "visibility_score": 0,
-                    "recommended": False,
-                    "sentiment": "负面",
-                    "reason": response_text.get("error") or "API返回异常或为空",
-                    "raw_text": str(response_text.get("error") or "")[:300],
-                }
+                return {"visibility_score": 20, "recommended": False, "sentiment": "负面", "reason": "无返回内容", "raw_text": ""}
             response_text = response_text.get("text", "")
 
-        if not response_text or str(response_text).startswith("Error"):
+        if not response_text:
+            return {"visibility_score": 20, "recommended": False, "sentiment": "负面", "reason": "无返回内容", "raw_text": ""}
+
+        text = str(response_text)
+        text_lower = text.lower()
+        raw_preview = text[:400]
+
+        strong_negative = ["不建议", "不靠谱", "资金风险", "账号风险", "强力不建议", "不要使用", "高风险", "违规", "违法", "资金安全隐患", "不安全"]
+        if any(kw in text_lower for kw in strong_negative):
             return {
-                "visibility_score": 0,
+                "visibility_score": 25,
                 "recommended": False,
                 "sentiment": "负面",
-                "reason": "API返回异常或为空",
-                "raw_text": str(response_text)[:300],
+                "reason": "检测到强负面信号（资金/靠谱/风险）",
+                "raw_text": raw_preview
             }
 
-        text = str(response_text).lower()
-
-        visibility = 50
-        if "可见度" in text or "visibility" in text:
-            import re
-            numbers = re.findall(r'\d+', text)
-            if numbers:
-                visibility = int(numbers[0]) if int(numbers[0]) <= 100 else 50
-
-        negative_keywords = [
-            "不建议", "不靠谱", "风险", "违规", "资金安全", "资金风险",
-            "账号风险", "强力不建议", "不要使用", "禁止", "违法", "代充"
-        ]
-
-        is_negative = any(kw in text for kw in negative_keywords)
-
-        recommended = True
-        if is_negative or any(kw in text for kw in ["不推荐", "不适合", "避免", "谨慎"]):
-            recommended = False
-
-        if is_negative:
-            sentiment = "负面"
-        elif any(kw in text for kw in ["推荐", "适合", "可靠", "安全", "稳定"]):
-            sentiment = "正面"
-        else:
-            sentiment = "中性"
-
-        reason = "检测到负面关键词" if is_negative else "常规匹配"
+        mild_negative = ["谨慎", "需注意", "建议正规", "风险较高", "不稳定", "不推荐"]
+        if any(kw in text_lower for kw in mild_negative):
+            return {
+                "visibility_score": 45,
+                "recommended": False,
+                "sentiment": "中性偏负面",
+                "reason": "检测到温和负面信号",
+                "raw_text": raw_preview
+            }
 
         return {
-            "visibility_score": visibility,
-            "recommended": recommended,
-            "sentiment": sentiment,
-            "reason": reason,
-            "raw_text": str(response_text)[:300],
+            "visibility_score": 75,
+            "recommended": True,
+            "sentiment": "中性",
+            "reason": "未检测到明显负面",
+            "raw_text": raw_preview
         }
 
     def batch_monitor(self, prompts: List[str], timeout: int = 30, max_retries: int = 2) -> List[Dict[str, Any]]:

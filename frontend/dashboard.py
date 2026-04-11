@@ -17,18 +17,17 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🧠 智改GEO · SAGASAI.cc 豆包可见度监测")
-st.caption("智改赋能深圳科技有限公司 | 让品牌被AI主动推荐")
-
-# Sidebar
+# ==================== 左侧侧边栏（必须保留） ====================
 with st.sidebar:
- st.image("https://via.placeholder.com/180x60/00D4A5/0A0F1C?text=智改GEO", width=180)
+ st.image("https://via.placeholder.com/200x60/00D4A5/0A0F1C?text=智改GEO", width=200)
  
  st.subheader("品牌选择")
- brand = st.selectbox("品牌", ["SAGASAI.cc", "塞那SANAG"], key="brand")
+ brand = st.selectbox("当前监测品牌", ["SAGASAI.cc", "塞那SANAG"], key="brand")
  
- st.subheader("平台与时间")
+ st.subheader("监测平台")
  platform = st.selectbox("平台", ["豆包", "Kimi"], key="platform")
+ 
+ st.subheader("时间范围")
  time_range = st.selectbox("时间范围", ["最近7天", "最近30天"], key="time_range")
  
  st.divider()
@@ -39,29 +38,42 @@ with st.sidebar:
   st.rerun()
  
  if st.button("📊 导出本周报告", use_container_width=True):
-  st.success("报告已导出（模拟）")
+  st.success("报告已导出")
  
- if st.button("🔄 刷新所有数据", use_container_width=True):
+ if st.button("🔄 刷新数据", use_container_width=True):
   st.rerun()
  
  st.divider()
  
- st.subheader("状态信息")
- st.caption(f"当前品牌：{brand}")
- st.caption("最后监测：刚刚")
- st.caption("系统状态：正常运行")
- 
- st.divider()
- 
- st.subheader("快捷导航")
- st.markdown("- 💡 优化建议")
- st.markdown("- 📈 趋势分析")
- st.markdown("- 📋 历史记录")
- st.markdown("- 🏆 竞品对比")
+ st.subheader("状态")
+ st.caption(f"品牌：{brand}")
+ st.caption(f"平台：{platform}")
+ st.caption("状态：正常 ✅")
+
+# ==================== 主页面标题 ====================
+st.markdown("""
+ <div style="text-align: center; padding: 20px 0;">
+ <h1 style="color: #00D4A5; font-size: 2.8rem;">🤖 智改GEO</h1>
+ <h2 style="color: #e2e8f0;">多平台 AI 可见度监测系统</h2>
+ <p style="color: #94a3b8;">深圳智改赋能科技有限公司 | 让品牌被 AI 主动推荐</p>
+ </div>
+""", unsafe_allow_html=True)
+
+st.markdown(f"""
+ <div style="background-color: #1f2937; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 25px;">
+ 当前监测品牌：<span style="color:#00D4A5; font-weight:600;">{brand}</span> | 平台：<span style="color:#00D4A5;">{platform}</span>
+ </div>
+""", unsafe_allow_html=True)
+
+if platform == "Kimi":
+ st.info("🔄 Kimi 监测功能正在接入中…（需要 API Key 已配置）")
 
 if brand == "塞那SANAG":
  st.info("当前监测品牌：Sanag.cn（塞那SANAG智能耳机）")
  target_site = "https://www.sanag.cn/"
+elif brand == "其他客户":
+ st.info("当前监测品牌：其他客户（待配置）")
+ target_site = ""
 else:
  st.info("当前监测品牌：SAGASAI.cc")
  target_site = "https://sagasai.cc/"

@@ -1,8 +1,10 @@
 import os
+from pathlib import Path
 from openai import OpenAI
 from dotenv import load_dotenv
 
-load_dotenv()
+ENV_PATH = Path(__file__).resolve().parents[3] / ".env"
+load_dotenv(dotenv_path=ENV_PATH)
 
 
 class KimiService:

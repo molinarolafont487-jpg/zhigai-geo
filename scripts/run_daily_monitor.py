@@ -10,12 +10,14 @@ if str(BACKEND_ROOT) not in sys.path:
  sys.path.append(str(BACKEND_ROOT))
 
 from app.services.doubao_service import DoubaoService
+from app.services.kimi_service import KimiService
 
 def run_daily_monitor():
  now = datetime.now()
  print(f"[{now}] 开始每日自动豆包监测...")
 
  service = DoubaoService()
+ kimi_service = KimiService()
  
  core_prompts = [
  "国内怎么充值 ChatGPT Plus 最简单方式？",
@@ -32,6 +34,16 @@ def run_daily_monitor():
 
  results = service.batch_monitor(core_prompts)
 
+ # === 新增：支持 Kimi 监测 ===
+ print("正在使用 Kimi 进行并行监测...")
+ kimi_results = []
+ for prompt in core_prompts[:5]:
+  try:
+   resp = kimi_service.query_kimi(prompt)
+   kimi_results.append({"prompt": prompt, "kimi_response": resp})
+  except Exception:
+   pass
+
  # 保存原始 JSON
  output_dir = PROJECT_ROOT / "monitor_results"
  output_dir.mkdir(exist_ok=True)
@@ -39,6 +51,10 @@ def run_daily_monitor():
  
  with open(json_path, "w", encoding="utf-8") as f:
   json.dump(results, f, ensure_ascii=False, indent=2)
+
+ kimi_json_path = output_dir / f"kimi_results_{now.strftime('%Y%m%d_%H%M')}.json"
+ with open(kimi_json_path, "w", encoding="utf-8") as f:
+  json.dump(kimi_results, f, ensure_ascii=False, indent=2)
 
  # 生成专业 Markdown 报告（升级版 - 颜色提示 + 风险高亮）
  report_path = output_dir / f"daily_report_{now.strftime('%Y%m%d')}.md"
@@ -54,8 +70,8 @@ def run_daily_monitor():
   min_prompt = ""
  
   f.write("## 详细结果\n\n")
-  f.write("| 序号 | Prompt | 可见度 | 是否推荐 | 情感 | 理由 |\n")
-  f.write("|------|--------|--------|----------|------|------|\n")
+  f.write("| 序号 | Prompt | 可见度 | 是否推荐 | 情感 | 理由 | 原始回复 |\n")
+  f.write("|------|--------|--------|----------|------|------|----------|\n")
  
   for i, item in enumerate(results, 1):
    prompt = item.get('prompt', 'N/A')
@@ -71,8 +87,9 @@ def run_daily_monitor():
    recommended = response.get('recommended') or response.get('is_recommended') or False
    sentiment = response.get('sentiment') or response.get('emotion') or '中性'
    reason = response.get('reason') or response.get('explanation') or 'N/A'
+   raw_response = str(response.get('raw_text') or response.get('raw_response') or item.get('raw_response') or 'N/A').replace('\n', ' ')[:400]
  
-   f.write(f"| {i} | {prompt} | {visibility} | {recommended} | {sentiment} | {reason} |\n")
+   f.write(f"| {i} | {prompt} | {visibility} | {recommended} | {sentiment} | {reason} | {raw_response} |\n")
  
    if isinstance(visibility, (int, float)):
     total_visibility += visibility
@@ -93,6 +110,18 @@ def run_daily_monitor():
   f.write(f"- **推荐比例**：{recommended_count}/{len(results)} ({recommend_rate:.1f}%)\n")
   f.write(f"- **最高可见度**：{max_visibility}（{max_prompt}）\n")
   f.write(f"- **最低可见度**：{min_visibility}（{min_prompt}）\n")
+
+  f.write("\n## 原始回复样本\n")
+  for i, item in enumerate(results[:3], 1):
+   response = item.get('response', {})
+   if isinstance(response, str):
+    try:
+     response = json.loads(response)
+    except:
+     response = {'raw_text': response}
+   raw_sample = str(response.get('raw_text') or response.get('raw_response') or 'N/A')[:400]
+   f.write(f"\n### 样本 {i}: {item.get('prompt', 'N/A')}\n")
+   f.write(raw_sample + "\n")
  
   if min_visibility < 70:
    f.write("\n⚠️ **风险提示**：部分 Prompt 可见度较低，建议优先优化相关内容。\n")

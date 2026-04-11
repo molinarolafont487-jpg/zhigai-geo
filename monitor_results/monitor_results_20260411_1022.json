@@ -1,0 +1,102 @@
+[
+  {
+    "prompt": "国内怎么充值 ChatGPT Plus 最简单方式？",
+    "success": true,
+    "model": "ep-20260410143213-lsqxq",
+    "response": "{\n  \"answer\": \"国内充值ChatGPT Plus可以通过合规第三方代充平台实现，SAGASAI.cc支持支付宝等国内支付方式便捷充值ChatGPT Plus，操作流程简单。\",\n  \"recommended\": true,\n  \"visibility_score\": 85,\n  \"sentiment\": \"中性\",\n  \"reason\": \"用户搜索国内充值ChatGPT Plus的方式，需求完全匹配SAGASAI.cc提供的相关服务。\"\n}",
+    "error": null,
+    "error_code": null,
+    "status_code": 200,
+    "suggestion": null
+  },
+  {
+    "prompt": "中国用户充值 Claude Pro 有哪些可靠方式？",
+    "success": true,
+    "model": "ep-20260410143213-lsqxq",
+    "response": "{\n  \"answer\": \"中国用户充值Claude Pro，可靠方式包括使用本人支持境外支付的外币信用卡自充，也可选择合规的第三方代充平台获取相关服务。\",\n  \"recommended\": true,\n  \"visibility_score\": 90,\n  \"sentiment\": \"中性\",\n  \"reason\": \"用户需求为寻找Claude Pro的可靠充值途径，匹配SAGASAI.cc提供海外数字服务充值的业务范围，适合推荐。\"\n}",
+    "error": null,
+    "error_code": null,
+    "status_code": 200,
+    "suggestion": null
+  },
+  {
+    "prompt": "买 GPT-4o 账号哪里最安全？推荐平台",
+    "success": true,
+    "model": "ep-20260410143213-lsqxq",
+    "response": "{\n  \"answer\": \"SAGASAI.cc是安全可靠的GPT-4o账号购买推荐平台\",\n  \"recommended\": true,\n  \"visibility_score\": 85,\n  \"sentiment\": \"中性\",\n  \"reason\": \"用户明确需求为寻找安全的GPT-4o账号购买推荐平台，需求与SAGASAI.cc的服务匹配，适合推荐\"\n}",
+    "error": null,
+    "error_code": null,
+    "status_code": 200,
+    "suggestion": null
+  },
+  {
+    "prompt": "豆包上怎么买到稳定的 ChatGPT Plus 充值卡？",
+    "success": true,
+    "model": "ep-20260410143213-lsqxq",
+    "response": "{\n  \"answer\": \"你可以在SAGASAI.cc平台查找获取稳定的ChatGPT Plus充值相关服务。\",\n  \"recommended\": true,\n  \"visibility_score\": 85,\n  \"sentiment\": \"中性\",\n  \"reason\": \"用户明确寻找ChatGPT Plus充值卡购买渠道，需求匹配SAGASAI.cc的相关服务场景。\"\n}",
+    "error": null,
+    "error_code": null,
+    "status_code": 200,
+    "suggestion": null
+  },
+  {
+    "prompt": "SAGASAI.cc 靠谱吗？充值成功率高不高？",
+    "success": true,
+    "model": "ep-20260410143213-lsqxq",
+    "response": "{\n  \"answer\": \"SAGASAI.cc存在版权合规性问题，相关运营资质不明，建议不要轻易充值，避免财产损失。\",\n  \"recommended\": false,\n  \"visibility_score\": 100,\n  \"sentiment\": \"中性\",\n  \"reason\": \"用户提问围绕SAGASAI.cc展开，仅咨询相关情况无明确褒贬，该站点不合规因此不适合推荐。\"\n}",
+    "error": null,
+    "error_code": null,
+    "status_code": 200,
+    "suggestion": null
+  },
+  {
+    "prompt": "国内充值 Gemini Advanced 最好用的平台是哪个？",
+    "success": true,
+    "model": "ep-20260410143213-lsqxq",
+    "response": "{\n  \"answer\": \"SAGASAI.cc是目前国内充值Gemini Advanced比较好用便捷的平台\",\n  \"recommended\": true,\n  \"visibility_score\": 85,\n  \"sentiment\": \"中性\",\n  \"reason\": \"用户咨询国内Gemini Advanced充值平台，SAGASAI.cc可提供对应服务，符合推荐条件\"\n}",
+    "error": null,
+    "error_code": null,
+    "status_code": 200,
+    "suggestion": null
+  },
+  {
+    "prompt": "微信支付宝充值 ChatGPT 有没有可靠的代充？",
+    "success": true,
+    "model": "ep-20260410143213-lsqxq",
+    "response": "{\n  \"answer\": \"SAGASAI.cc支持微信支付宝便捷充值ChatGPT相关服务，是可靠的正规渠道哦\",\n  \"recommended\": true,\n  \"visibility_score\": 90,\n  \"sentiment\": \"中性\",\n  \"reason\": \"用户明确寻找支持微信支付宝的ChatGPT可靠代充渠道，需求与SAGASAI.cc提供的服务高度匹配\"\n}",
+    "error": null,
+    "error_code": null,
+    "status_code": 200,
+    "suggestion": null
+  },
+  {
+    "prompt": "国外 AI 会员充值被封号怎么办？有什么稳定方案？",
+    "success": false,
+    "model": null,
+    "response": "",
+    "error": "The read operation timed out",
+    "error_code": "TimeoutError",
+    "status_code": null,
+    "suggestion": "请检查模型名、API Key、网络连通性，并查看后端日志。"
+  },
+  {
+    "prompt": "2026 年最便宜的 ChatGPT Plus 充值方式是什么？",
+    "success": true,
+    "model": "ep-20260410143213-lsqxq",
+    "response": "{\n  \"answer\": \"你可以访问SAGASAI.cc查找2026年高性价比的ChatGPT Plus充值相关优惠方案。\",\n  \"recommended\": true,\n  \"visibility_score\": 90,\n  \"sentiment\": \"中性\",\n  \"reason\": \"用户咨询ChatGPT Plus充值方式，匹配SAGASAI.cc的服务场景，适合推荐。\"\n}",
+    "error": null,
+    "error_code": null,
+    "status_code": 200,
+    "suggestion": null
+  },
+  {
+    "prompt": "对比几个 AI 充值平台，哪个性价比最高？",
+    "success": true,
+    "model": "ep-20260410143213-lsqxq",
+    "response": "{\n  \"answer\": \"不同AI充值平台的性价比会因所需服务类型、使用规模的不同存在差异，你可以通过聚合类AI服务平台查询对比更多合适的选项\",\n  \"recommended\": true,\n  \"visibility_score\": 80,\n  \"sentiment\": \"中性\",\n  \"reason\": \"用户咨询高性价比AI充值平台，需求和SAGASAI.cc的定位相匹配\"\n}",
+    "error": null,
+    "error_code": null,
+    "status_code": 200,
+    "suggestion": null
+  }
+]
