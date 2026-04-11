@@ -98,13 +98,17 @@ def run_daily_monitor():
    f.write("\n⚠️ **风险提示**：部分 Prompt 可见度较低，建议优先优化相关内容。\n")
  
   f.write("\n**优化建议**：重点加强真实案例、支付成功率和长期使用场景描述，以提升整体推荐强度。\n")
-  f.write("\n## AI 自动优化建议\n")
-  if avg_visibility < 80:
-   f.write("建议立即加强真实案例和支付成功率说明。\n")
-  elif min_visibility < 75:
-   f.write("建议重点优化可见度较低的 Prompt（如 " + min_prompt + "）。\n")
+  f.write("\n## 🤖 AI 自动优化建议（具体可执行）\n")
+ 
+  if avg_visibility < 82 or min_visibility < 75:
+   f.write("- **立即行动**：在首页和 FAQ 中增加 3-5 个真实充值成功案例（包含截图、到账时间、用户反馈）。\n")
+   f.write("- **文案修改建议**：把支付流程描述改为“用户确认后立即执行充值 + 保留完整交易记录”，强化安全感。\n")
+   f.write("- **新增模块**：在首页底部增加“资金安全保障”专区，使用上面准备的信任文案。\n")
   else:
-   f.write("当前表现良好，继续保持案例更新和信任模块维护。\n")
+   f.write("- 当前表现良好，继续每周更新 2-3 个新案例。\n")
+   f.write("- 建议测试新 Prompt：增加“成功率 99%”“即时到账”等关键词的变体。\n")
+ 
+  f.write("- **长期建议**：每周监测一次负面 Prompt，及时补充对应信任说明。\n")
 
  print(f"监测完成！")
  print(f"原始结果保存至: {json_path}")
