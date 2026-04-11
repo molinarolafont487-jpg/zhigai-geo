@@ -154,28 +154,65 @@ class DoubaoService:
             "suggestion": "请检查 candidate_models 配置。",
         }
 
-    def parse_geo_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
-        if not response.get("success"):
+    def parse_geo_response(self, response_text) -> Dict[str, Any]:
+        if isinstance(response_text, dict) and "text" in response_text:
+            if not response_text.get("success"):
+                return {
+                    "visibility_score": 0,
+                    "recommended": False,
+                    "sentiment": "负面",
+                    "reason": response_text.get("error") or "API返回异常或为空",
+                    "raw_text": str(response_text.get("error") or "")[:300],
+                }
+            response_text = response_text.get("text", "")
+
+        if not response_text or str(response_text).startswith("Error"):
             return {
-                "error": response.get("error") or "请求失败",
-                "error_code": response.get("error_code"),
-                "status_code": response.get("status_code"),
-                "suggestion": response.get("suggestion"),
+                "visibility_score": 0,
+                "recommended": False,
+                "sentiment": "负面",
+                "reason": "API返回异常或为空",
+                "raw_text": str(response_text)[:300],
             }
 
-        text = response.get("text", "")
-        if not text:
-            return {"error": "响应为空"}
+        text = str(response_text).lower()
 
-        try:
-            return json.loads(text)
-        except Exception:
-            return {
-                "raw_text": text,
-                "error": "响应不是合法 JSON",
-            }
+        visibility = 50
+        if "可见度" in text or "visibility" in text:
+            import re
+            numbers = re.findall(r'\d+', text)
+            if numbers:
+                visibility = int(numbers[0]) if int(numbers[0]) <= 100 else 50
 
-    def batch_monitor(self, prompts: List[str], timeout: int = 45, max_retries: int = 2) -> List[Dict[str, Any]]:
+        negative_keywords = [
+            "不建议", "不靠谱", "风险", "违规", "资金安全", "资金风险",
+            "账号风险", "强力不建议", "不要使用", "禁止", "违法", "代充"
+        ]
+
+        is_negative = any(kw in text for kw in negative_keywords)
+
+        recommended = True
+        if is_negative or any(kw in text for kw in ["不推荐", "不适合", "避免", "谨慎"]):
+            recommended = False
+
+        if is_negative:
+            sentiment = "负面"
+        elif any(kw in text for kw in ["推荐", "适合", "可靠", "安全", "稳定"]):
+            sentiment = "正面"
+        else:
+            sentiment = "中性"
+
+        reason = "检测到负面关键词" if is_negative else "常规匹配"
+
+        return {
+            "visibility_score": visibility,
+            "recommended": recommended,
+            "sentiment": sentiment,
+            "reason": reason,
+            "raw_text": str(response_text)[:300],
+        }
+
+    def batch_monitor(self, prompts: List[str], timeout: int = 30, max_retries: int = 2) -> List[Dict[str, Any]]:
         results: List[Dict[str, Any]] = []
         for i, prompt in enumerate(prompts):
             for attempt in range(max_retries + 1):
@@ -187,7 +224,7 @@ class DoubaoService:
 
                     if parsed.get("error") and attempt < max_retries:
                         print(f"第 {i + 1} 条返回异常，准备重试: {parsed.get('error')}")
-                        time.sleep(2)
+                        time.sleep(3)
                         continue
 
                     results.append(
@@ -212,7 +249,7 @@ class DoubaoService:
                         )
                         print(f"第 {i + 1} 条监测失败: {str(e)}")
                     else:
-                        time.sleep(2)
+                        time.sleep(3)
                         continue
 
         return results
