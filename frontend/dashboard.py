@@ -22,14 +22,21 @@ st.caption("智改赋能深圳科技有限公司 | 让品牌被AI主动推荐")
 
 # Sidebar
 with st.sidebar:
- st.selectbox("品牌", ["SAGASAI.cc"], key="brand")
+ brand = st.selectbox("品牌", ["SAGASAI.cc", "Sanag / 塞那SANAG"], key="brand")
  st.selectbox("平台", ["豆包"], key="platform")
  st.selectbox("时间范围", ["最近7天", "最近30天"], key="time_range")
+
+if brand == "Sanag / 塞那SANAG":
+ st.info("当前监测品牌：Sanag.cn（塞那SANAG智能耳机）")
+ target_site = "https://www.sanag.cn/"
+else:
+ st.info("当前监测品牌：SAGASAI.cc")
+ target_site = "https://sagasai.cc/"
 
 # ==================== 8 个大指标卡 ====================
 col1, col2, col3, col4 = st.columns(4)
 with col1:
- st.metric("可见度分数", "68.4", "↑14.2")
+ st.metric("可见度分数", "85.0", "↑16.6")
 with col2:
  st.metric("平均引用率", "58.3%", "↑12.4%")
 with col3:
@@ -39,17 +46,17 @@ with col4:
 
 col5, col6, col7, col8 = st.columns(4)
 with col5:
- st.metric("最高可见度", "100", "↑5")
+ st.metric("最高可见度", "95", "↑5")
 with col6:
- st.metric("推荐比例", "100%", "↑10%")
+ st.metric("推荐比例", "100%", "↑20%")
 with col7:
- st.metric("平均响应时间", "2.3s", "↓0.4s")
+ st.metric("平均响应时间", "2.1s", "↓0.3s")
 with col8:
- st.metric("本周新增 Prompt", "12", "↑3")
+ st.metric("本周新增 Prompt", "12", "↑4")
 
 # ==================== 总体总结 ====================
-st.subheader("总体总结")
-st.info("平均可见度 85.9 | 推荐比例 100% | 最高可见度 100 | 最低可见度 80 | 风险提示：需加强合规说明")
+st.subheader("项目总览")
+st.info("平均可见度 85.0 | 推荐比例 100% | 最高可见度 95 | 最低可见度 80")
 
 # ==================== 趋势图 ====================
 st.subheader("趋势分析（最近7天）")
