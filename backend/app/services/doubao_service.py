@@ -157,45 +157,54 @@ class DoubaoService:
     def parse_geo_response(self, response_text) -> Dict[str, Any]:
         if isinstance(response_text, dict) and "text" in response_text:
             if not response_text.get("success"):
-                return {"visibility_score": 20, "recommended": False, "sentiment": "负面", "reason": "无返回内容", "raw_text": ""}
-            response_text = response_text.get("text", "")
+                response_text = f"Error: {response_text.get('error') or 'API异常或超时'}"
+            else:
+                response_text = response_text.get("text", "")
 
-        if not response_text:
-            return {"visibility_score": 20, "recommended": False, "sentiment": "负面", "reason": "无返回内容", "raw_text": ""}
+        if not response_text or (isinstance(response_text, str) and ("Error" in str(response_text) or "timed out" in str(response_text).lower())):
+            return {"visibility_score": 25, "recommended": False, "sentiment": "负面", "reason": "API异常或超时", "raw_text": str(response_text)[:800]}
 
-        text = str(response_text)
-        text_lower = text.lower()
-        raw_preview = text[:400]
+        try:
+            if isinstance(response_text, str):
+                data = json.loads(response_text)
+            else:
+                data = response_text
 
-        strong_negative = ["不建议", "不靠谱", "资金风险", "账号风险", "强力不建议", "不要使用", "高风险", "违规", "违法", "资金安全隐患", "不安全"]
-        if any(kw in text_lower for kw in strong_negative):
+            visibility = int(data.get("visibility_score") or data.get("score") or 50)
+            recommended = data.get("recommended") or data.get("is_recommended") or False
+            sentiment = data.get("sentiment") or "中性"
+            reason = str(data.get("reason") or "")
+            raw_preview = str(response_text)[:800]
+
+            if recommended is False or str(recommended).lower() == "false":
+                visibility = min(visibility, 30)
+
+            text_check = (reason + " " + str(data.get("answer", ""))).lower()
+            if any(kw in text_check for kw in [
+                "暂无法", "暂无", "无法推荐", "不相关", "无关联", "不匹配",
+                "补充信息", "自行筛选", "可通过", "从资质", "口碑筛选",
+                "正常咨询", "无情感偏向", "与平台无关"
+            ]):
+                visibility = min(visibility, 30)
+                recommended = False
+
             return {
-                "visibility_score": 25,
-                "recommended": False,
-                "sentiment": "负面",
-                "reason": "检测到强负面信号（资金/靠谱/风险）",
+                "visibility_score": visibility,
+                "recommended": bool(recommended),
+                "sentiment": sentiment,
+                "reason": reason or "N/A",
                 "raw_text": raw_preview
             }
+        except Exception:
+            pass
 
-        mild_negative = ["谨慎", "需注意", "建议正规", "风险较高", "不稳定", "不推荐"]
-        if any(kw in text_lower for kw in mild_negative):
-            return {
-                "visibility_score": 45,
-                "recommended": False,
-                "sentiment": "中性偏负面",
-                "reason": "检测到温和负面信号",
-                "raw_text": raw_preview
-            }
+        text_lower = str(response_text).lower()
+        if any(kw in text_lower for kw in ["不建议", "不靠谱", "资金风险", "违规"]):
+            return {"visibility_score": 25, "recommended": False, "sentiment": "负面", "reason": "强负面", "raw_text": str(response_text)[:800]}
 
-        return {
-            "visibility_score": 75,
-            "recommended": True,
-            "sentiment": "中性",
-            "reason": "未检测到明显负面",
-            "raw_text": raw_preview
-        }
+        return {"visibility_score": 45, "recommended": False, "sentiment": "中性", "reason": "未检测到明确信号", "raw_text": str(response_text)[:800]}
 
-    def batch_monitor(self, prompts: List[str], timeout: int = 30, max_retries: int = 2) -> List[Dict[str, Any]]:
+    def batch_monitor(self, prompts: List[str], timeout: int = 60, max_retries: int = 3) -> List[Dict[str, Any]]:
         results: List[Dict[str, Any]] = []
         for i, prompt in enumerate(prompts):
             for attempt in range(max_retries + 1):

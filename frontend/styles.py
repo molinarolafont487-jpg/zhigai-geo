@@ -261,8 +261,8 @@ def section_header(title: str, subtitle: str = ""):
 def sidebar_brand():
     import streamlit as st
     st.markdown("""
-    <div class="sidebar-brand">
-        <div class="sidebar-brand-name">智改<span style="color:#a78bfa">GEO</span></div>
-        <div class="sidebar-brand-sub">AI 可见度管理后台</div>
+    <div class="sidebar-brand" style="padding-top:2px;">
+        <div style="font-size:28px;font-weight:900;color:#ffffff;line-height:1">zg<span style='color:#a855f7'>geo</span></div>
+        <div class="sidebar-brand-sub" style="margin-top:8px;">AI 可视度管理后台</div>
     </div>
     """, unsafe_allow_html=True)
